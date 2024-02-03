@@ -13,6 +13,8 @@ if 'hug_key' not in st.session_state:
   st.session_state['hug_key']=''
 if 'pine_key' not in st.session_state:
   st.session_state['pine_key']=''
+if 'embed' not in st.session_state:
+  st.session_state['embed']=None
 
 
 #side menu
@@ -42,6 +44,7 @@ if submit:
       st.sidebar.write('📃 Generating embeddings (3 of 4)')
       embeddings=get_embeddings(st.session_state['hug_key'])
       dim=embeddings.client.get_sentence_embedding_dimension()
+      st.session_state['embed']=embeddings
       print(f'gen embeddings of dim-------{dim}')
 
       #create index and push the data-embedding to index
@@ -66,11 +69,11 @@ search_b=st.button('Search')
 if search_b:
   if st.session_state['pine_key']!='' and st.session_state['hug_key']!='':
     st.success('Generating the result')
-    st.write(query)
-    st.write(nlinks)
     st.subheader('Answers:',divider='rainbow')
+    #get embeddings
+    # embeddings=get_embeddings(st.session_state['hug_key'])
     #retreival of documents
-    ret_docs=retrieve_similar_docs(embeddings,query,nlinks)
+    ret_docs=retrieve_similar_docs(st.session_state['embed'],query,nlinks)
     #structured output
     for i in ret_docs:
       st.write(i.metadata['loc'])
