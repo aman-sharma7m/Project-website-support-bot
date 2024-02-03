@@ -1,7 +1,7 @@
 import streamlit as st
 import os 
 import time
-
+from utils import *
 
 
 st.set_page_config(page_title='Support chatbot for excelcult')
@@ -27,15 +27,26 @@ if submit:
     st.session_state['hug_key']=hug_key
     st.session_state['pine_key']=pine_key
     with st.spinner('Wait for it...'):
+
       #scrape the data and get it 
       st.sidebar.write('🌍 scraping the data!!!! (1 of 4)')
+      docs=load_documents()
+      print(f'Scraped docs-------{len(docs)}')
+
       #chunk it 
       st.sidebar.write('🪓 Splitting scraped data!!! (2 of 4)')
+      chunk_data=chunking(docs)
+      print(f'chunked docs-------{len(chunk_data)}')
+
       #get_embeddings
-      time.sleep(5)
       st.sidebar.write('📃 Generating embeddings (3 of 4)')
+      embeddings=get_embeddings(st.session_state['hug_key'])
+      dim=embeddings.client.get_sentence_embedding_dimension()
+      print(f'gen embeddings of dim-------{dim}')
+
       #create index and push the data-embedding to index
       st.sidebar.write('🏬 Storing the data embeddings (4 of 4)')
+      store_embeddings(chunk_data,embeddings,st.session_state['pine_key'])
     #done
     st.sidebar.success('👉 Proceed to enter the query >>>>>>')
 
@@ -59,9 +70,10 @@ if search_b:
     st.write(nlinks)
     st.subheader('Answers:',divider='rainbow')
     #retreival of documents
-
+    ret_docs=retrieve_similar_docs(embeddings,query,nlinks)
     #structured output
-    
-    
+    for i in ret_docs:
+      st.write(i.metadata['loc'])
+      st.write(i.page_content.split('\n')[0])
   else:
     st.error('Invalid keys')
